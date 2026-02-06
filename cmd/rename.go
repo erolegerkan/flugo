@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -46,11 +47,45 @@ func init() {
 	lsCmdOutput, lsErr := lsCmdStruct.Output()
 
 	if lsErr != nil {
-		fmt.Println("❗️Error occurred when running ls command")
+		fmt.Println("❗️Error occurred when running ls command.")
 		return
 	}
 
-	fmt.Println(string(lsCmdOutput))
+	currentPathItems := string(lsCmdOutput)
+
+	isLibFolderExists := strings.Contains(currentPathItems, "lib")
+	isAndroidFolderExists := strings.Contains(currentPathItems, "android")
+	isBuildFolderExists := strings.Contains(currentPathItems, "build")
+
+	if isAndroidFolderExists && isLibFolderExists && isBuildFolderExists {
+		fmt.Println("This is a flutter project")
+		exec.Command("cd build/app/outputs/flutter-apk/app-release.apk")
+		lsBuildCmdOutput, err := exec.Command("ls").Output()
+
+		if err != nil {
+			fmt.Println("❗️Error occurred when running ls command in build folder.")
+			return
+		}
+
+		isApkExists := strings.Contains(string(lsBuildCmdOutput), "app-release.apk")
+
+		if !isApkExists {
+			return
+		}
+
+		renamingOperationOutput, _ := exec.Command("mv", "app-release.apk","<new_name_should_be_here>").Output()
+		isRenamingSucceed := strings.Contains(string(renamingOperationOutput), "No such file or directory")
+
+		if !isRenamingSucceed {
+			fmt.Println("❗️Error occurred during renaming APK file.")
+			return
+		}
+
+		fmt.Println("✅ Renaming completed successfully")
+
+	} else {
+		fmt.Println("Ooops this isn't a flutter project")
+	}
 
 	// Here you will define your flags and configuration settings.
 
