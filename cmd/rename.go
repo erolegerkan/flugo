@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -27,11 +25,13 @@ var renameCmd = &cobra.Command{
 		flugo rename "<specified_name>"
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("rename called")
+		
 	},
 }
 
 func init() {
+	var currentDirectoryItems []string
+	
 	rootCmd.AddCommand(renameCmd)
 
 	currentPath, err := os.Getwd()
@@ -41,51 +41,62 @@ func init() {
 		return
 	}
 
-	fmt.Println(currentPath)
+	fmt.Println("Verbose Mode : " + currentPath)
 
-	lsCmdStruct := exec.Command("ls")
-	lsCmdOutput, lsErr := lsCmdStruct.Output()
+	currentDirectoryRead, currentDirectoryReadError := os.ReadDir(currentPath)
 
-	if lsErr != nil {
-		fmt.Println("❗️Error occurred when running ls command.")
+	if currentDirectoryReadError != nil {
+		fmt.Println("❗️Error occurred when getting current directory.")
 		return
 	}
-
-	currentPathItems := string(lsCmdOutput)
-
-	isLibFolderExists := strings.Contains(currentPathItems, "lib")
-	isAndroidFolderExists := strings.Contains(currentPathItems, "android")
-	isBuildFolderExists := strings.Contains(currentPathItems, "build")
-
-	if isAndroidFolderExists && isLibFolderExists && isBuildFolderExists {
-		fmt.Println("This is a flutter project")
-		exec.Command("cd build/app/outputs/flutter-apk/app-release.apk")
-		lsBuildCmdOutput, err := exec.Command("ls").Output()
-
-		if err != nil {
-			fmt.Println("❗️Error occurred when running ls command in build folder.")
-			return
-		}
-
-		isApkExists := strings.Contains(string(lsBuildCmdOutput), "app-release.apk")
-
-		if !isApkExists {
-			return
-		}
-
-		renamingOperationOutput, _ := exec.Command("mv", "app-release.apk","<new_name_should_be_here>").Output()
-		isRenamingSucceed := strings.Contains(string(renamingOperationOutput), "No such file or directory")
-
-		if !isRenamingSucceed {
-			fmt.Println("❗️Error occurred during renaming APK file.")
-			return
-		}
-
-		fmt.Println("✅ Renaming completed successfully")
-
-	} else {
-		fmt.Println("Ooops this isn't a flutter project")
+	
+	for _, value  := range currentDirectoryRead {
+		currentDirectoryItems = append(currentDirectoryItems, value.Name())
 	}
+	
+}
+	
+	// isLibFolderExists := strings.Contains(currentPathItems, "lib")
+	// isAndroidFolderExists := strings.Contains(currentPathItems, "android")
+	// isBuildFolderExists := strings.Contains(currentPathItems, "build")
+	
+	// // Checking for Flutter project 
+	// if isAndroidFolderExists && isLibFolderExists && isBuildFolderExists {
+	// 	fmt.Println("Verbose Mode : This is a flutter project")
+		
+	// 	// Run "ls" command inside of the Flutter app
+	// 	lsCmd := exec.Command("ls")
+	// 	lsCmd.Dir = "build/app/outputs/flutter-apk/"
+	// 	lsCmdOutput, cdCmdError  := lsCmd.CombinedOutput()
+		
+	// 	if cdCmdError != nil {
+	// 		fmt.Println("❗️Error occurred when running ls command in build folder insid Flutter app.")
+	// 		return
+	// 	}
+
+	// 	isApkExists := strings.Contains(string(lsCmdOutput), "app-release.apk")
+
+	// 	if !isApkExists {
+	// 		fmt.Println("⚠️\tRelease APK file does not exist!\nFirst build the release apk with \"flutter build apk\"")
+	// 		return
+	// 	}
+
+	// 	renamingOperation := exec.Command("mv", "app-release.apk","new_apk_name.apk")
+	// 	renamingOperation.Dir = "build/app/outputs/flutter-apk/"
+	// 	renamingOperationOutput, renamingError := renamingOperation.CombinedOutput()
+		
+	// 	if renamingError != nil {
+	// 		fmt.Println("Verbose Mode : " + string(renamingOperationOutput))
+	// 		fmt.Println("❗️Error occurred during renaming APK file.")
+	// 		return
+	// 	}
+		
+
+	// 	fmt.Println("✅ Renaming completed successfully")
+
+	// } else {
+	// 	fmt.Println("Ooops this isn't a flutter project")
+	// }
 
 	// Here you will define your flags and configuration settings.
 
@@ -96,4 +107,4 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// renameCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
+
