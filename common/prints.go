@@ -1,19 +1,21 @@
 package common
 
-import "fmt"
+import (
+	"github.com/erolegerkan/flugo/styles"
+)
 
 func VerbosePrint(sentence string){
-	fmt.Println("🟠 Verbose Mode : " + sentence)
+	styles.RenderWithStyle("🟠 Verbose Mode : " + sentence, "verbose")
 }
 
 func WarningPrint(sentence string){
-	fmt.Println("⚠️ Warning : " + sentence)
+	styles.RenderWithStyle("⚠️ Warning : " + sentence,"warning")
 }
 
 func ErrorPrint(sentence string){
-	fmt.Println("❗️ Error : " + sentence)
+	styles.RenderWithStyle("❗️ Error : " + sentence, "error")
 }
 
 func SuccessPrint(sentence string){
-	fmt.Println("✅ Success : " + sentence)
+	styles.RenderWithStyle("✅ Success : " + sentence, "success")
 }
