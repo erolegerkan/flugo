@@ -1,40 +1,50 @@
 /*
 Copyright © 2026 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/erolegerkan/flugo/common"
 	"github.com/spf13/cobra"
 )
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "To configure flugo CLI",
+	Long: `
+		Configure flugo CLI tool with config command. 
+		To get existing configurations run this command with "--list", "-l" flag.
+		To insert new configuration run this command with "--insert", "-i" flag.
+		To get configuration schema, run this command with "--schema", "-s" flag.
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("config called")
+		
+		isVerboseModeActive, _  := cmd.Flags().GetBool("verbose")
+		isListModeActive,_ := cmd.Flags().GetBool("list")
+		isInsertModeActive,_ := cmd.Flags().GetBool("insert")
+		isSchemaModeActive,_ := cmd.Flags().GetBool("schema")
+		
+		isDefaultModeActive := !isListModeActive && !isInsertModeActive && !isSchemaModeActive
+		
+		if isVerboseModeActive {
+			common.VerbosePrint("Currently executing : "+ cmd.CommandPath())
+		}
+		
+		if isDefaultModeActive {
+			common.VerbosePrint("Default mode active. By default \"config\" command returns configurations.")
+			common.VerbosePrint("To different options for \"config\" command run the command with \"help\" flag")
+		}
+		
+		
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// configCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	
+	configCmd.Flags().BoolP("list","l", false,"Returns the configuration lists.")
+	configCmd.Flags().BoolP("insert","i", false,"Inserts new configuration file.")
+	configCmd.Flags().BoolP("schema","s", false,"Returns the configuration schema.")
+	
 }
