@@ -30,16 +30,16 @@ var renameCmd = &cobra.Command{
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		newApkName := args[0]
-		
-		var isVerboseMode bool = true
-		
+
 		var currentDirectoryItems []string
 		var isLibFolderExist bool
 		var isAndroidFolderExist bool
 		var isBuildFolderExist bool
-		
+
 		var apkPathDirectoryItems []string
-		
+
+		isVerboseModeActive, _ := cmd.Flags().GetBool("verbose")
+
 		currentPath, err := os.Getwd()
 
 		if err != nil {
@@ -47,7 +47,10 @@ var renameCmd = &cobra.Command{
 			return
 		}
 
-		common.VerbosePrint("Current Path : " + currentPath)
+		if isVerboseModeActive {
+			common.VerbosePrint("Currently executing : " + cmd.CommandPath())
+			common.VerbosePrint("Current Path : " + currentPath)
+		}
 
 		currentDirectoryRead, currentDirectoryReadError := os.ReadDir(currentPath)
 
@@ -55,89 +58,89 @@ var renameCmd = &cobra.Command{
 			fmt.Println("❗️Error occurred when getting current directory.")
 			return
 		}
-		
-		for _, value  := range currentDirectoryRead {
+
+		for _, value := range currentDirectoryRead {
 			currentDirectoryItems = append(currentDirectoryItems, value.Name())
-			
+
 			if strings.Contains(value.Name(), "lib") && value.IsDir() {
 				isLibFolderExist = true
 			}
-			
+
 			if strings.Contains(value.Name(), "build") && value.IsDir() {
 				isBuildFolderExist = true
 			}
-		
+
 			if strings.Contains(value.Name(), "android") && value.IsDir() {
 				isAndroidFolderExist = true
 			}
 		}
-		
-		if isVerboseMode {
-			common.VerbosePrint("Current Directory Items : \n" + strings.Join(currentDirectoryItems," "))
-			
+
+		if isVerboseModeActive {
+			common.VerbosePrint("Current Directory Items : \n" + strings.Join(currentDirectoryItems, " "))
+
 			if isLibFolderExist {
 				common.VerbosePrint("lib folder found in the project directory.")
 			} else {
 				common.VerbosePrint("lib folder did NOT found in the project directory.")
 			}
-			
+
 			if isAndroidFolderExist {
 				common.VerbosePrint("android folder found in the project directory.")
 			} else {
 				common.VerbosePrint("android folder did NOT found in the project directory.")
 			}
-			
+
 			if isBuildFolderExist {
 				common.VerbosePrint("build folder found in the project directory.")
 			} else {
 				common.VerbosePrint("build folder did NOT found in the project directory.")
 			}
 		}
-		
+
 		if !(isLibFolderExist && isBuildFolderExist && isAndroidFolderExist) {
 			common.ErrorPrint("Ooops, this is not a Flutter Mobile project for Android platform.")
 			return
 		}
-		
+
 		apkPath := filepath.Join("build", "app", "outputs", "flutter-apk")
-		
+
 		apkPathDirectoryRead, apkPathDirectoryReadError := os.ReadDir(apkPath)
-		
+
 		if apkPathDirectoryReadError != nil {
 			common.ErrorPrint("Error occurred when getting APK directory.")
 			return
 		}
-		
+
 		common.VerbosePrint("APK Path read : " + apkPath)
-		
+
 		var releaseApkCount int = 0
 		var releaseApkName string
-		for _, value  := range apkPathDirectoryRead {
+		for _, value := range apkPathDirectoryRead {
 			apkPathDirectoryItems = append(apkPathDirectoryItems, value.Name())
 			if value.Name() == "app-release.apk" {
 				releaseApkName = value.Name()
 				releaseApkCount++
 			}
 		}
-		
+
 		common.VerbosePrint("APK Path Directory Items : \n" + strings.Join(apkPathDirectoryItems, " "))
-		
+
 		if releaseApkCount != 1 {
 			common.ErrorPrint("Release APK file did not found in the directory with " + releaseApkName + "name.")
 			return
 		}
-		
-		oldApkPath := filepath.Join(apkPath,releaseApkName)
-		newApkPath := filepath.Join(apkPath,newApkName + ".apk")
+
+		oldApkPath := filepath.Join(apkPath, releaseApkName)
+		newApkPath := filepath.Join(apkPath, newApkName+".apk")
 		apkRenamingError := os.Rename(oldApkPath, newApkPath)
-		
+
 		if apkRenamingError != nil {
 			common.ErrorPrint("Error occurred when APK file renaming.")
-			return 
+			return
 		}
-		
+
 		common.SuccessPrint("APK file renamed successfully.\nNew name for the APK : " + newApkName + ".apk")
-		
+
 	},
 }
 
