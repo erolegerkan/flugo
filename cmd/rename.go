@@ -27,10 +27,26 @@ var renameCmd = &cobra.Command{
 		Example :
 		flugo rename "<specified_name>"
 	`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.RangeArgs(1,2),
 	Run: func(cmd *cobra.Command, args []string) {
 		newApkName := args[0]
-
+		
+		currentApkName := "release-apk"
+		isCurrentNameExists, _ := cmd.Flags().GetBool("current")
+		
+		isNewApkNameContainsExtension := strings.Contains(newApkName, ".apk")
+		if !isNewApkNameContainsExtension {
+			newApkName = newApkName + ".apk"
+		}
+		
+		if len(args) == 2 && isCurrentNameExists{
+			currentApkName = args[1]
+			
+			if !strings.Contains(currentApkName,".apk") {
+				currentApkName = currentApkName + ".apk"
+			}
+		}
+		
 		var currentDirectoryItems []string
 		var isLibFolderExist bool
 		var isAndroidFolderExist bool
@@ -48,6 +64,8 @@ var renameCmd = &cobra.Command{
 		}
 
 		if isVerboseModeActive {
+			common.VerbosePrint("Current APK Name : " + currentApkName)
+			common.VerbosePrint("New APK Name : " + newApkName)
 			common.VerbosePrint("Currently executing : " + cmd.CommandPath())
 			common.VerbosePrint("Current Path : " + currentPath)
 		}
@@ -112,6 +130,7 @@ var renameCmd = &cobra.Command{
 		}
 
 		common.VerbosePrint("APK Path read : " + apkPath)
+		
 
 		var releaseApkCount int = 0
 		var releaseApkName string
@@ -122,17 +141,43 @@ var renameCmd = &cobra.Command{
 				releaseApkCount++
 			}
 		}
-
-		common.VerbosePrint("APK Path Directory Items : \n" + strings.Join(apkPathDirectoryItems, " "))
+		
+		apkPathDirectoryItemsString := strings.Join(apkPathDirectoryItems, " ")
+		common.VerbosePrint("APK Path Directory Items : \n" + apkPathDirectoryItemsString)	
+	
+		var oldApkPath string
+		var newApkPath string
+		var apkRenamingError error
 
 		if releaseApkCount != 1 {
-			common.ErrorPrint("Release APK file did not found in the directory with " + releaseApkName + "name.")
+			common.VerbosePrint("Release APK file did not found in the directory with app_release.apk name.")
+			
+			if strings.Contains(apkPathDirectoryItemsString,currentApkName) {
+				common.VerbosePrint("APK file found in the project with " + currentApkName + " name")
+				oldApkPath = filepath.Join(apkPath, releaseApkName)
+				newApkPath = filepath.Join(apkPath, newApkName)
+				apkRenamingError = os.Rename(oldApkPath, newApkPath)
+				
+				if apkRenamingError != nil {
+					common.ErrorPrint("Error occurred when APK file renaming.")
+					return
+				}
+				
+				return
+
+			}
+			
+			if len(apkPathDirectoryItems) == 4 {
+				common.WarningPrint("Release APK file did not found with the default name. Define the current name shown in below.",true)
+				common.WarningPrint("flugo rename \"<new_apk_name>\" --current \"<current_apk_name>\" ", false)
+			}
+			
 			return
 		}
 
-		oldApkPath := filepath.Join(apkPath, releaseApkName)
-		newApkPath := filepath.Join(apkPath, newApkName+".apk")
-		apkRenamingError := os.Rename(oldApkPath, newApkPath)
+		oldApkPath = filepath.Join(apkPath, releaseApkName)
+		newApkPath = filepath.Join(apkPath, newApkName)
+		apkRenamingError = os.Rename(oldApkPath, newApkPath)
 
 		if apkRenamingError != nil {
 			common.ErrorPrint("Error occurred when APK file renaming.")
@@ -146,4 +191,6 @@ var renameCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(renameCmd)
+	
+	renameCmd.Flags().BoolP("current","c",false,"Defines current APK name")
 }

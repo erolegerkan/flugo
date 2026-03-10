@@ -8,8 +8,12 @@ func VerbosePrint(sentence string){
 	styles.RenderWithStyle("🟠 Verbose Mode : " + sentence, "verbose")
 }
 
-func WarningPrint(sentence string){
-	styles.RenderWithStyle("⚠️ Warning : " + sentence,"warning")
+func WarningPrint(sentence string, isPrefixNeeeded bool){
+	if isPrefixNeeeded {
+		styles.RenderWithStyle("⚠️ Warning : " + sentence,"warning")
+	} else {
+		styles.RenderWithStyle(sentence,"warning")
+	}
 }
 
 func ErrorPrint(sentence string){
